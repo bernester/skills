@@ -1,1 +1,1 @@
-{ "name": "rubberduck", "version": "0.1.0", "description": "Probes an idea you talk through, asking only about what you said, and hands back the gaps", "author": { "name": "Bernhard Ruoff" } }
+{"name": "rubberduck", "version": "0.1.0", "description": "Probes an idea you talk through, asking only about what you said, and hands back the gaps", "author": {"name": "Bernhard Ruoff"}, "license": "MIT", "repository": "https://github.com/bernester/skills"}

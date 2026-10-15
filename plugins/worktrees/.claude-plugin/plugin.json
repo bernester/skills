@@ -1,1 +1,1 @@
-{ "name": "worktrees", "version": "0.1.0", "description": "Keep git worktrees, branches and Claude sessions tidy: worktrees, prune-merged, agents-clean, left", "author": { "name": "Bernhard Ruoff" } }
+{"name": "worktrees", "version": "0.1.0", "description": "Keep git worktrees, branches and Claude sessions tidy: worktrees, prune-merged, agents-clean, left", "author": {"name": "Bernhard Ruoff"}, "license": "MIT", "repository": "https://github.com/bernester/skills"}

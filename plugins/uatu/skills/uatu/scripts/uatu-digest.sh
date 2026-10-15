@@ -64,7 +64,7 @@ section() { printf '\n## %s\n\n' "$1" >> "$OUT"; }
 {
   echo "# Uatu digest — $TODAY"
   echo
-  echo "Deterministic. Regenerate with \`skills/uatu/scripts/uatu-digest.sh\`."
+  echo "Deterministic. Regenerate with \`~/.claude/skills/uatu/scripts/uatu-digest.sh\`."
   echo
   echo "- CLI: \`$cli_version\` · window ${WINDOW}d"
   echo "- Transcripts: $recent_count of $all_count files touched in the window, ${store_mb} MB total"
@@ -161,15 +161,15 @@ each_recent grep -ho '"attributionSkill":"[^"]*"' \
   echo "Authored skills with no invocation in the window:"
   echo
   idle=0
-  while read -r target; do
-    [[ $target == skills/* || $target == plugins/*/skills/* ]] || continue
-    name=${target##*/}
+  while read -r rel; do
+    [[ $rel == skills/* ]] || continue
+    name=${rel#skills/}
     if ! grep -qx "$name" <(awk '{print $2}' "$TMP/ran-skills.txt") \
       && ! grep -qx "/$name" <(awk '{print $2}' "$TMP/typed-skills.txt"); then
       echo "- \`/$name\`"
       idle=$((idle + 1))
     fi
-  done < <(cut -f2 "$links")
+  done < <(cut -f3 "$links")
   ((idle)) || echo "- none"
 } >> "$OUT"
 

@@ -122,7 +122,7 @@ targets disagree (a rule in `CLAUDE.md` that the output style undoes). Findings 
 - `agents/*.md`
 - `settings.base.json`
 - `skills.txt`
-- every skill under `skills/*/`
+- every authored skill (Skill-craft below)
 
 Every finding cites `research/<file>.md:<line>`. If no `research/` file bears on a topic,
 stay silent on it — do not reason from your own knowledge of what Anthropic recommends.
@@ -142,8 +142,8 @@ recommendation:
 
 ### Skill-craft — a skill authored here against Agent Skills guidance
 
-Only for authored skills — live `~/.claude/skills` links whose target, relative to its git repo,
-is `skills/*` or `plugins/*/skills/*` — or the `/uatu <skill-dir>` target. Source:
+Only for authored skills — live `~/.claude/skills` links into a git repo — or the
+`/uatu <skill-dir>` target. Source:
 `research/anthropic-best-practices.md` §3.
 
 Mechanical — run these, do not just describe them:

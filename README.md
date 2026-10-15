@@ -17,11 +17,13 @@ Claude Code skills by Bernhard Ruoff, as a plugin marketplace.
 
 Swap `worktrees` for `rubberduck` or `uatu` as you like.
 
+`worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`.
+
 ## uatu needs `UATU_HOME`
 
 uatu keeps its history and reports in `$UATU_HOME/uatu/` and reads `$UATU_HOME/GLOSSARY.md`
 and `$UATU_HOME/research/*.md`. Point `UATU_HOME` at the git repo holding them; without it,
-uatu stops.
+uatu stops. It is built for its author's own harness repo, so expect to adapt it.
 
 ## Editing the skills
 
