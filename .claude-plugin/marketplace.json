@@ -1,0 +1,10 @@
+{
+  "name": "bernester",
+  "owner": { "name": "Bernhard Ruoff" },
+  "description": "Bernhard Ruoff's Claude Code skills: rubber-ducking, a weekly harness watcher, and worktree hygiene",
+  "plugins": [
+    { "name": "rubberduck", "source": "./plugins/rubberduck" },
+    { "name": "uatu", "source": "./plugins/uatu" },
+    { "name": "worktrees", "source": "./plugins/worktrees" }
+  ]
+}

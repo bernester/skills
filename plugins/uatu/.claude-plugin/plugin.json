@@ -1,0 +1,1 @@
+{ "name": "uatu", "version": "0.1.0", "description": "Weekly report on how your Claude Code harness is used, as proposed changes with evidence; data lives in $UATU_HOME", "author": { "name": "Bernhard Ruoff" } }
