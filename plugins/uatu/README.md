@@ -3,22 +3,26 @@
 A weekly report on how your Claude setup is really used, as proposed changes with evidence.
 
 **This one is for developers who keep their own harness repo.** It is built for its author's
-setup, so expect to adapt it. If you are not sure, skip it.
+setup. If you are not sure, skip it.
 
 ## What it helps with
 
 uatu reads upstream Claude Code changes, how your skills and settings are actually used, and
 whether your policy still matches your research notes. It comes back with at most seven
-proposed changes, each with its evidence and the exact edit. It never applies them.
+proposed changes, each with its evidence and the exact edit. It never applies them, but it does commit its weekly report to
+`$UATU_HOME/uatu/`.
 
 ## Example
 
 > **You:** `/uatu`
 >
-> **Claude:** Digest written. Three recommendations this week:
-> 1. Skill `foo` has not run in 41 days — retire it? Evidence: `history.tsv` rows 12–19.
+> **Claude:** Digest written. Two recommendations this week:
+> 1. Skill `deploy-notes` has not run in 41 days — retire it? Evidence: `history.tsv` rows 12–19.
 > 2. Upstream added a hook event your policy does not mention. Proposed edit: `policy.md:30`.
-> 3. ...
+>
+> **You:** Skip the first, I still use it.
+>
+> **Claude:** Noted in `declined.md`.
 
 `/uatu <skill-dir>` checks one skill's craft instead and prints the result.
 
@@ -30,11 +34,12 @@ uatu stops. It is built for its author's own harness repo, so expect to adapt it
 
 ## Install
 
-[Follow the install steps on the index](../../README.md#install), then type `/uatu` to start.
+[Follow the install steps on the index](../../README.md#install), then set `UATU_HOME` (above)
+and type `/uatu` to start.
 
 ## Needs
 
-`python3`.
+`python3`, `jq`, and macOS.
 
 ## What it runs
 

@@ -25,8 +25,13 @@ It never gives answers, opinions or new ideas: those stay with you.
 > **You:** Hm. The tool shows opens, but that counts the preview pane too.
 >
 > **Duck:** So what does "open" tell you about whether the length is the problem?
+>
+> **You:** Done.
+>
+> **Duck:** Gaps I heard: you said people "don't click" but have not checked who reached the button.
+> Unstated assumption: that a long email is the cause. Open question: what "open" really measures.
 
-Say **stuck** and the duck asks one question from outside your frame. Say **check that** and it
+Say **done** and the duck lists the gaps it noticed, in your own words. Say **stuck** and the duck asks one question from outside your frame. Say **check that** and it
 looks up a file or fact you point at, then goes back to asking.
 
 ## Install

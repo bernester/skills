@@ -1,8 +1,8 @@
 # bernester/skills
 
-Claude Code skills by Bernhard Ruoff, as a plugin marketplace.
+Small add-ons for Claude, as a plugin marketplace. New here? Start with rubberduck.
 
-| Plugin | Skills | What for |
+| Plugin | Commands | What for |
 |---|---|---|
 | [`rubberduck`](plugins/rubberduck/README.md) | `/rubberduck` | Talk an idea through; it asks about what you said and hands back the gaps. |
 | [`uatu`](plugins/uatu/README.md) | `/uatu` | Weekly report on how your harness is used, as proposed changes with evidence. |
@@ -26,7 +26,7 @@ In the Claude desktop app:
 
 Swap `worktrees` for `rubberduck` or `uatu` as you like.
 
-`worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`.
+`worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`, `jq` and macOS.
 
 ## uatu needs `UATU_HOME`
 
