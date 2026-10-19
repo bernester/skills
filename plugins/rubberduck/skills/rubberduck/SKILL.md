@@ -45,4 +45,5 @@ The user ends the session ("done"); keep probing until they do. Then, in chat:
 - **Frame**: answered, changed (old → new sentence), or drifted.
 - **Gaps**, **jumps**, **unstated assumptions**, **open questions** — each in the user's own
   words, each without a fix. Omit an empty heading.
-- One closing line: `/grilling` can take it from here, if you want challenge and recommendations.
+- If a `/grilling` skill is available, close with one line: `/grilling` can take it from here, if
+  you want challenge and recommendations.
