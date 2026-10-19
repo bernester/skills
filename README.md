@@ -5,7 +5,7 @@ Claude Code skills by Bernhard Ruoff, as a plugin marketplace.
 | Plugin | Skills | What for |
 |---|---|---|
 | `rubberduck` | `/rubberduck` | Talk an idea through; it asks about what you said and hands back the gaps. |
-| `uatu` | `/uatu` | Weekly report on how your harness is used, as proposed changes with evidence. |
+| `uatu` | `/uatu` | Weekly report on how your harness is used, proposing changes as pull requests, each with evidence. |
 | `worktrees` | `/worktrees`, `/prune-merged`, `/agents-clean`, `/left` | Keep worktrees, branches and Claude sessions tidy. |
 
 ## Install
