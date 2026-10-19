@@ -326,8 +326,10 @@ repo_count=0
   echo "### skill-doctor"
   echo
   echo '```'
-  if sd=$(cd "$CLAUDE_DIR" && claude -p "/skill-doctor" 2>/dev/null) && [[ -n $sd ]]; then
-    grep -v 'claude.ai sync' <<< "$sd"
+  if doctor_out=$(cd "$CLAUDE_DIR" && claude -p "/skill-doctor" </dev/null 2>/dev/null) && [[ -n $doctor_out ]] \
+    && doctor_out=$(grep -v 'claude.ai sync' <<< "$doctor_out") \
+    && ! grep -v 'synced from claude.ai' <<< "$doctor_out" | grep -q 'claude\.ai'; then
+    printf '%s\n' "$doctor_out"
   else
     echo "skill-doctor failed — no listing-cost verdict this run."
   fi
@@ -412,9 +414,9 @@ fi
   echo
   ids=$(while IFS=$'\t' read -r top rel link; do
     [[ $link == skills/* ]] || continue
-    (cd "$top" && grep -rnoE 'claude-(opus|sonnet|haiku|fable|[0-9])[a-z0-9.-]*[0-9]' "$rel" 2>/dev/null | sed "s|^|$(basename "$top")/|")
+    (cd "$top" && grep -rnoE 'claude-(opus|sonnet|haiku|fable|[0-9])[a-z0-9.-]*[0-9]' "$rel" 2>/dev/null | sed "s|^|${top##*/}/|")
   done < "$links")
-  if [[ -n $ids ]]; then sed -E 's/^([^:]+:[0-9]+):(.*)$/- \1: \2/' <<< "$ids"; else echo "- none"; fi
+  if [[ -n $ids ]]; then sed -E 's/^([^:]+:[0-9]+):(.*)$/- \1: \2/' <<< "$ids" | sort -u; else echo "- none"; fi
 } >> "$OUT"
 
 # ---------------------------------------------------------------- sources
