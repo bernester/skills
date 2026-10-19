@@ -1,0 +1,38 @@
+{%- assign parts = page.path | split: '/' -%}
+{%- assign kind = '' -%}
+{%- if parts.size == 3 and parts[0] == 'plugins' and parts[2] == 'README.md' -%}
+  {%- assign kind = 'plugin' -%}
+  {%- assign body_class = 'plugin plugin-' | append: parts[1] -%}
+{%- elsif parts[0] == 'plugins' and parts.size > 3 -%}
+  {%- assign body_class = 'plugin-' | append: parts[1] -%}
+{%- elsif page.path == 'README.md' -%}
+  {%- assign kind = 'home' -%}
+  {%- assign body_class = 'home' -%}
+{%- endif -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title | default: site.title | escape }}</title>
+{% seo title=false %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&amp;family=JetBrains+Mono&amp;display=swap">
+<link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
+</head>
+<body class="{{ body_class }}">
+<main>
+{%- if kind == 'home' %}
+{%- capture cta %}</p>
+<p class="cta"><a class="button" href="#install">How to install →</a></p>{% endcapture %}
+{{ content | replace_first: '</p>', cta }}
+{%- else %}
+{%- if kind == 'plugin' %}
+<p class="back"><a href="{{ '/' | relative_url }}">← All plugins</a></p>
+{%- endif %}
+{{ content }}
+{%- endif %}
+</main>
+</body>
+</html>
