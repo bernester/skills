@@ -5,7 +5,7 @@ Small add-ons for Claude, as a plugin marketplace. New here? Start with rubberdu
 | Plugin | Commands | What for |
 |---|---|---|
 | [`rubberduck`](plugins/rubberduck/README.md) | `/rubberduck` | Talk an idea through; it asks about what you said and hands back the gaps. |
-| [`uatu`](plugins/uatu/README.md) | `/uatu` | Weekly report on how your harness is used, as proposed changes with evidence. |
+| [`uatu`](plugins/uatu/README.md) | `/uatu` | Weekly report on how your harness is used, proposing changes as pull requests, each with evidence. |
 | [`worktrees`](plugins/worktrees/README.md) | `/worktrees`, `/prune-merged`, `/agents-clean`, `/left` | Keep worktrees, branches and Claude sessions tidy. |
 
 ## Install

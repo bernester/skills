@@ -1,6 +1,6 @@
 # uatu
 
-A weekly report on how your Claude setup is really used, as proposed changes with evidence.
+A weekly report on how your Claude setup is really used, proposing changes as pull requests with evidence.
 
 **This one is for developers who keep their own harness repo.** It is built for its author's
 setup. If you are not sure, skip it.
@@ -9,8 +9,9 @@ setup. If you are not sure, skip it.
 
 uatu reads upstream Claude Code changes, how your skills and settings are actually used, and
 whether your policy still matches your research notes. It comes back with at most seven
-proposed changes, each with its evidence and the exact edit. It never applies them, but it does commit its weekly report to
-`$UATU_HOME/uatu/`.
+proposed changes, each with its evidence. Each change to `$UATU_HOME` becomes its own pull request
+labelled `uatu`; anything else stays in the report. It never merges, and commits only its weekly
+report to `$UATU_HOME/uatu/`.
 
 ## Example
 
@@ -18,11 +19,10 @@ proposed changes, each with its evidence and the exact edit. It never applies th
 >
 > **Claude:** Digest written. Two recommendations this week:
 > 1. Skill `deploy-notes` has not run in 41 days — retire it? Evidence: `history.tsv` rows 12–19.
-> 2. Upstream added a hook event your policy does not mention. Proposed edit: `policy.md:30`.
->
-> **You:** Skip the first, I still use it.
->
-> **Claude:** Noted in `declined.md`.
+> 2. Upstream added a hook event your policy does not mention. Opened a pull request for `policy.md:30`.
+
+Merge the pull request to accept; close it with a reason to decline, and uatu will not propose
+it again.
 
 `/uatu <skill-dir>` checks one skill's craft instead and prints the result.
 
@@ -30,7 +30,8 @@ proposed changes, each with its evidence and the exact edit. It never applies th
 
 uatu keeps its history and reports in `$UATU_HOME/uatu/` and reads `$UATU_HOME/GLOSSARY.md`
 and `$UATU_HOME/research/*.md`. Point `UATU_HOME` at the git repo holding them; without it,
-uatu stops. It is built for its author's own harness repo, so expect to adapt it.
+uatu stops. To open pull requests, `$UATU_HOME` needs a GitHub `origin` and a `uatu` label;
+without them it reports only. It is built for its author's own harness repo, so expect to adapt it.
 
 ## Install
 
@@ -39,7 +40,7 @@ and type `/uatu` to start.
 
 ## Needs
 
-`python3`, `jq`, and macOS.
+`python3`, `jq`, `gh`, and macOS.
 
 ## What it runs
 
