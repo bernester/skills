@@ -323,6 +323,16 @@ repo_count=0
   done < <(cut -f1 "$links" | sort -u)
   echo "Repos linked into \`~/.claude\`: $repo_count. Verify overall: **$verify_status**"
   echo
+  echo "### skill-doctor"
+  echo
+  echo '```'
+  if sd=$(cd "$CLAUDE_DIR" && claude -p "/skill-doctor" 2>/dev/null) && [[ -n $sd ]]; then
+    grep -v 'claude.ai sync' <<< "$sd"
+  else
+    echo "skill-doctor failed — no listing-cost verdict this run."
+  fi
+  echo '```'
+  echo
   echo "Retention: \`cleanupPeriodDays\` = $(jq -r '.cleanupPeriodDays // "unset"' "$CLAUDE_DIR/settings.json" 2>/dev/null)."
   oldest=$(find "$PROJECTS" -name '*.jsonl' -print0 2>/dev/null | xargs -0 ls -tr 2>/dev/null | head -1)
   [[ -n $oldest ]] && echo "Oldest transcript: $(date -r "$oldest" +%F) (\`${oldest##*/}\`)."
@@ -395,6 +405,17 @@ if ((FETCH)); then
 else
   echo "Skipped (\`--no-fetch\`)." >> "$OUT"
 fi
+
+{
+  echo
+  echo "Model IDs named in linked skills:"
+  echo
+  ids=$(while IFS=$'\t' read -r top rel link; do
+    [[ $link == skills/* ]] || continue
+    (cd "$top" && grep -rnoE 'claude-(opus|sonnet|haiku|fable|[0-9])[a-z0-9.-]*[0-9]' "$rel" 2>/dev/null | sed "s|^|$(basename "$top")/|")
+  done < "$links")
+  if [[ -n $ids ]]; then sed -E 's/^([^:]+:[0-9]+):(.*)$/- \1: \2/' <<< "$ids"; else echo "- none"; fi
+} >> "$OUT"
 
 # ---------------------------------------------------------------- sources
 

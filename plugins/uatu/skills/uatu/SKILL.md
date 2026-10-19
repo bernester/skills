@@ -98,11 +98,18 @@ or say why it is a keeper. A `verify.sh` reading **DRIFT** whose output names a 
 is **urgent**: the CLI has replaced a symlinked file and live config has silently stopped
 being tracked. The recovery is that repo's own installer — name it from the failing
 `verify.sh` output, which says what to run.
+The `### skill-doctor` block is the listing-cost verdict: a never-invoked skill with listing
+context is a deletion candidate as above. Its synced-from-claude.ai summary line is
+report-only — a deleted copy re-downloads; the fix is disabling it on claude.ai. uatu's own
+counts stay the source for authored skills. `skill-doctor failed` means no verdict this run.
 
 **Upstream.** Releases newer than the installed CLI, and changed doc pages. The bar is
 narrow: does it change a finding in `research/*.md`? A new hook event, a new skill
 frontmatter field, a scheduling feature that reaches `~/.claude`, a model ID a skill names
-that no longer exists. "47 releases happened" is not a recommendation.
+that no longer exists — take the IDs from the digest's "Model IDs named" list and check them
+against the current IDs in the `claude-api` skill (load it with the Skill tool); never infer
+current IDs from the changelog or docs. If it does not load, say so and draw no model-ID
+conclusion. "47 releases happened" is not a recommendation.
 
 **Retention.** `cleanupPeriodDays` and the oldest surviving transcript. The history file is
 what makes the trend outlive the sweep; if a column has gone flat because data expired,
