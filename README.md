@@ -44,3 +44,5 @@ for d in plugins/*/skills/*; do ln -sfn "$PWD/$d" ~/.claude/skills/"${d##*/}"; d
 ## License
 
 MIT
+
+The fonts in `assets/fonts/` are under the SIL Open Font License 1.1 — see the `LICENSE-*.txt` files beside them.
