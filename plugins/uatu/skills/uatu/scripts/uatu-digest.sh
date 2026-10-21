@@ -321,6 +321,15 @@ repo_count=0
     fi
     echo
   done < <(cut -f1 "$links" | sort -u)
+  echo "### ~/.claude (\`git status\`, excluding \`uatu/\`)"
+  echo
+  if claude_drift=$(git --no-optional-locks -C "$CLAUDE_DIR" status --porcelain -- . ':!uatu' 2>&1) && [[ -z $claude_drift ]]; then
+    echo "\`git status\`: **clean**"
+  else
+    verify_status=DRIFT
+    printf '`git status`: **DRIFT**\n\n```\n%s\n```\n' "$claude_drift"
+  fi
+  echo
   echo "Repos linked into \`~/.claude\`: $repo_count. Verify overall: **$verify_status**"
   echo
   echo "Retention: \`cleanupPeriodDays\` = $(jq -r '.cleanupPeriodDays // "unset"' "$CLAUDE_DIR/settings.json" 2>/dev/null)."

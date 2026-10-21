@@ -99,7 +99,9 @@ usually one line in a skill or one allow rule, and the signature says which.
 or say why it is a keeper. A `verify.sh` reading **DRIFT** whose output names a detached link
 is **urgent**: the CLI has replaced a symlinked file and live config has silently stopped
 being tracked. The recovery is that repo's own installer — name it from the failing
-`verify.sh` output, which says what to run.
+`verify.sh` output, which says what to run. `~/.claude` reading **DRIFT** under `git status` is
+a CLI save or a hand edit — commit or revert it (ADR 0015); not urgent. A `T` entry is
+a detached link: urgent, as above.
 
 **Upstream.** Releases newer than the installed CLI, and changed doc pages. The bar is
 narrow: does it change a finding in `research/*.md`? A new hook event, a new skill
@@ -132,7 +134,7 @@ linked ones.
 
 ## Policy
 
-The axis `verify.sh` cannot see: it checks a machine against policy, this checks policy
+The axis the drift checks cannot see: they check a machine, this checks policy
 against the guidance in `research/*.md`.
 
 Run the sweep only when `research/` or a policy file changed since the last report:
@@ -149,7 +151,7 @@ targets disagree (a rule in `CLAUDE.md` that the output style undoes). Findings 
 - `CLAUDE.md`
 - `output-styles/*.md`
 - `agents/*.md`
-- `settings.base.json`
+- `settings.json`
 - `skills.txt`
 - every authored skill (Skill-craft below)
 
@@ -219,12 +221,12 @@ Each recommendation carries three things, and is dropped if it cannot:
 ### 1. Drop `/rubberduck` — unused for 30 days
 
 **Evidence.** `~/.cache/uatu/digest.md` *Setup usage*: no invocation in the window;
-`links.txt:18` still links it; last typed 2026-08-02 (`history.jsonl`).
+`~/.claude/skills/rubberduck` still links it; last typed 2026-08-02 (`history.jsonl`).
 
 **Edit.**
 
-```diff
--skills/rubberduck
+```sh
+rm ~/.claude/skills/rubberduck
 ```
 
 **Why it earns its cost.** Every installed skill is a name the human has to remember. This
