@@ -13,6 +13,8 @@ policy against the research, and comes back with recommendations the human can v
 Work in `$UATU_HOME` on branch main; every `uatu/`, `research/` and policy
 path below is relative to it.
 If `UATU_HOME` is unset, stop and say so: it names the repo that holds that data.
+`UATU_LESSONS` and `UATU_PAPERCUTS` name two optional logs; unset, the digest says so and
+that channel is skipped.
 
 Two rules decide everything below:
 
@@ -87,7 +89,7 @@ Coverage is **reported, not asserted**. The transcript store spans two dozen CLI
 versions and two spellings of `sessionId`; a field missing from some records is a fact for
 the report, not a failure. No threshold fires until three rows of history exist.
 
-Six channels, in this order:
+Eight channels, in this order:
 
 **Behaviour.** Prompts typed three times or more → a skill candidate. A correction count
 that jumps → name the prompts. A tool-error signature with a double-digit count → the fix is
@@ -116,6 +118,15 @@ numbers outranks one that stands alone. A tip about a runtime feature is Upstrea
 that bar, not this one. A source under `## Pointers` in `sources.md` is a lead to check, never
 evidence. Everything else goes under **Noted** in the report, once; the issue is never
 re-read, so a noted tip is never raised again.
+
+**Lessons.** Each open entry the digest lists under *Logs* maps to one edit in the skill or
+script it names — a `file:line` and a diff. Cite the entry as `<file>:<line>` and never quote
+it. An entry that maps to no edit is not raised.
+
+**Papercuts.** Read the log the digest names. A symptom logged twice or more, however
+worded, or whose fix is a workaround, becomes a recommendation naming the tool, config or
+skill to change. Cite entries by line and never quote them: they name repos outside the
+linked ones.
 
 **Policy.** See the next section. Its findings become recommendations like any other.
 

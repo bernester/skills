@@ -33,6 +33,11 @@ and `$UATU_HOME/research/*.md`. Point `UATU_HOME` at the git repo holding them; 
 uatu stops. To open pull requests, `$UATU_HOME` needs a GitHub `origin` and a `uatu` label;
 without them it reports only. It is built for its author's own harness repo, so expect to adapt it.
 
+Two more optional variables name logs uatu reads as channels, each an absolute path; unset,
+the channel is skipped. `UATU_LESSONS` is a markdown file of `## ` entries; an entry is open
+when it contains `**open**` or `**open, …**`. `UATU_PAPERCUTS` has one line per papercut,
+`YYYY-MM-DD · symptom · fix · repo`.
+
 ## Install
 
 [Follow the install steps on the index](../../README.md#install), then set `UATU_HOME` (above)
