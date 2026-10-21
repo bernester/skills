@@ -426,6 +426,28 @@ for md in "$INBOX"/*.md; do
 done
 ((issues_read)) || echo "No unread issue." >> "$OUT"
 
+# ---------------------------------------------------------------- logs
+
+section "Logs"
+
+if [[ -f ${UATU_LESSONS:-} && -r $UATU_LESSONS ]]; then
+  open=$(awk '/^## /{h=$0;hl=FNR} /\*\*open[*,]/ && hl!=done {print "- "FILENAME":"hl": "h; done=hl}' \
+    "$UATU_LESSONS")
+  echo "${open:-- none open in \`$UATU_LESSONS\`}" >> "$OUT"
+else
+  echo "Lessons: not configured — set \`UATU_LESSONS\` to an absolute path (README)." >> "$OUT"
+fi
+if [[ -f ${UATU_PAPERCUTS:-} && -r $UATU_PAPERCUTS ]]; then
+  awk -v since="$(date -v-"${WINDOW}"d +%F)" -v f="$UATU_PAPERCUTS" '
+    /^(- )?[0-9]{4}-[0-9]{2}-[0-9]{2} · / {
+      n++; d = $0; sub(/^- /, "", d); if (substr(d, 1, 10) >= since) m++
+    }
+    END { printf "Papercuts: %s — %d entries, %d in the window.\n", f, n, m }' \
+    "$UATU_PAPERCUTS" >> "$OUT"
+else
+  echo "Papercuts: not configured — set \`UATU_PAPERCUTS\` to an absolute path (README)." >> "$OUT"
+fi
+
 # ---------------------------------------------------------------- history row
 
 if [[ ! -f $HISTORY ]]; then
