@@ -26,12 +26,12 @@ it again.
 
 `/uatu <skill-dir>` checks one skill's craft instead and prints the result.
 
-## uatu needs `UATU_HOME`
+## Set up
 
-uatu keeps its history and reports in `$UATU_HOME/uatu/` and reads `$UATU_HOME/GLOSSARY.md`
-and `$UATU_HOME/research/*.md`. Point `UATU_HOME` at the git repo holding them; without it,
-uatu stops. To open pull requests, `$UATU_HOME` needs a GitHub `origin` and a `uatu` label;
-without them it reports only. It is built for its author's own harness repo, so expect to adapt it.
+Point `UATU_HOME` at a git repo for uatu's history and reports, then run `/uatu setup`. It
+creates `uatu/` with starter files and an empty `research/`, never overwriting, and prints a
+checklist; do its `todo` lines. To open pull requests, `$UATU_HOME` needs a GitHub `origin` and a `uatu`
+label; without them uatu reports only. Without `UATU_HOME`, uatu stops.
 
 Two more optional variables name logs uatu reads as channels, each an absolute path; unset,
 the channel is skipped. `UATU_LESSONS` is a markdown file of `## ` entries; an entry is open
@@ -40,7 +40,7 @@ when it contains `**open**` or `**open, …**`. `UATU_PAPERCUTS` has one line pe
 
 ## Install
 
-[Follow the install steps on the index](../../README.md#install), then set `UATU_HOME` (above)
+[Follow the install steps on the index](../../README.md#install), then [set up](#set-up)
 and type `/uatu` to start.
 
 ## Needs

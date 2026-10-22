@@ -25,7 +25,7 @@ while (($#)); do
   esac
 done
 
-[[ -d $DATA ]] || { echo "uatu-digest: no data directory at $DATA" >&2; exit 1; }
+[[ -d $DATA ]] || { echo "uatu-digest: no data directory at $DATA — run /uatu setup" >&2; exit 1; }
 
 TODAY=$(date +%F)
 TMP=$(mktemp -d)
