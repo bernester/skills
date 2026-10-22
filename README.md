@@ -28,9 +28,9 @@ Swap `worktrees` for `rubberduck` or `uatu` as you like.
 
 `worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`, `jq` and macOS.
 
-## uatu needs `UATU_HOME`
+## Set up uatu
 
-See [uatu's README](plugins/uatu/README.md#uatu-needs-uatu_home).
+See [uatu's README](plugins/uatu/README.md#set-up).
 
 ## Editing the skills
 

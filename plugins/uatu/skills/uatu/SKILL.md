@@ -1,18 +1,17 @@
 ---
 name: uatu
-description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit to `$UATU_HOME` is opened as a pull request, never merged. Use for the weekly harness report, or `/uatu <skill-dir>` to check one skill's craft."
+description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit to `$UATU_HOME` is opened as a pull request, never merged. Use for the weekly harness report, `/uatu <skill-dir>` to check one skill's craft, or `/uatu setup` to create what uatu needs."
 disable-model-invocation: true
-allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(git remote get-url *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh), Bash(git remote get-url *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
 ---
 
 The observer. It reads upstream Claude Code changes, how the harness is really used, and
-policy against the research, and comes back with recommendations the human can veto. Read
-`$UATU_HOME/GLOSSARY.md` for the vocabulary — **digest**,
-**recommendation**, **currency** — if you have not this session.
+policy against the research, and comes back with recommendations the human can veto.
 
 Work in `$UATU_HOME` on branch main; every `uatu/`, `research/` and policy
 path below is relative to it.
-If `UATU_HOME` is unset, stop and say so: it names the repo that holds that data.
+If `UATU_HOME` is unset and the command is not `/uatu setup`, stop, say so and point to
+`/uatu setup`: it names the repo that holds that data.
 `UATU_LESSONS` and `UATU_PAPERCUTS` name two optional logs; unset, the digest says so and
 that channel is skipped.
 
@@ -33,6 +32,8 @@ outside the ones `~/.claude` links into.
 
 `/uatu <skill-dir>` runs only the skill-craft check in [Policy](#policy) on that one skill,
 inline, and prints its block. No digest, no report, no commit.
+
+`/uatu setup` runs `${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh`, prints its output, and stops.
 
 ## 1. Digest
 
