@@ -25,7 +25,7 @@ while (($#)); do
   esac
 done
 
-[[ -d $DATA ]] || { echo "uatu-digest: no data directory at $DATA" >&2; exit 1; }
+[[ -d $DATA ]] || { echo "uatu-digest: no data directory at $DATA — run /uatu setup" >&2; exit 1; }
 
 TODAY=$(date +%F)
 TMP=$(mktemp -d)
@@ -321,6 +321,15 @@ repo_count=0
     fi
     echo
   done < <(cut -f1 "$links" | sort -u)
+  echo "### ~/.claude (\`git status\`, excluding \`uatu/\`)"
+  echo
+  if claude_drift=$(git --no-optional-locks -C "$CLAUDE_DIR" status --porcelain -- . ':!uatu' 2>&1) && [[ -z $claude_drift ]]; then
+    echo "\`git status\`: **clean**"
+  else
+    verify_status=DRIFT
+    printf '`git status`: **DRIFT**\n\n```\n%s\n```\n' "$claude_drift"
+  fi
+  echo
   echo "Repos linked into \`~/.claude\`: $repo_count. Verify overall: **$verify_status**"
   echo
   echo "### skill-doctor"
@@ -373,36 +382,113 @@ if ((FETCH)); then
     echo "Changelog fetch failed — no upstream verdict this run." >> "$OUT"
   fi
 
-  # A changed hook-event list or frontmatter table can overturn a finding in research/*.md.
+  # A changed page can overturn a finding in research/*.md, so every Anthropic page a note
+  # cites is watched, plus four scheduling pages no note cites yet.
+  RESEARCH="$UATU_HOME/research"
   echo >> "$OUT"
   echo "Doc pages (cache: \`$CACHE/docs/\`):" >> "$OUT"
   echo >> "$OUT"
-  for page in hooks skills sub-agents scheduled-tasks routines desktop-scheduled-tasks \
-              headless memory settings-reference claude-directory; do
-    url="https://code.claude.com/docs/en/$page.md"
-    if ! curl -sSf -o "$TMP/$page.md" "$url" 2>/dev/null; then
-      echo "- \`$page\`: fetch failed" >> "$OUT"
+  {
+    cat "$RESEARCH"/*.md 2>/dev/null |
+      grep -oE 'https://(code\.claude\.com|platform\.claude\.com|www\.anthropic\.com)/[^][ <>()"`'"'"']*' |
+      sed -E 's/#.*$//; s/[.,;:*_]+$//; s/\.md$//'
+    printf 'https://code.claude.com/docs/en/%s\n' scheduled-tasks routines desktop-scheduled-tasks headless
+  } | sort -u > "$TMP/doc-urls.txt"
+  while read -r url; do
+    # code.claude.com keys stay bare page names so the caches from before this list still match.
+    case $url in
+      https://code.claude.com/docs/en/*) key=${url#https://code.claude.com/docs/en/} ;;
+      *) key=${url#https://} ;;
+    esac
+    key=${key//\//_}
+    fetched="$TMP/$key.md"
+    if [[ $url == https://www.anthropic.com/* ]]; then
+      if ! type=$(curl -sSfL -o "$TMP/$key.html" -w '%{content_type}' "$url" 2>/dev/null); then
+        echo "- \`$key\`: fetch failed" >> "$OUT"
+        continue
+      fi
+      if [[ $type != text/html* ]]; then
+        echo "- \`$key\`: skipped (${type%%;*})" >> "$OUT"
+        continue
+      fi
+      if ! textutil -stdin -format html -convert txt -stdout < "$TMP/$key.html" > "$fetched"; then
+        echo "- \`$key\`: text extraction failed" >> "$OUT"
+        continue
+      fi
+    elif ! curl -sSfL -o "$fetched" "$url.md" 2>/dev/null; then
+      echo "- \`$key\`: fetch failed" >> "$OUT"
       continue
     fi
-    cached="$CACHE/docs/$page.md"
+    cached="$CACHE/docs/$key.md"
     if [[ ! -f $cached ]]; then
-      cp "$TMP/$page.md" "$cached"
-      echo "- \`$page\`: baseline captured ($(wc -l < "$cached" | tr -d ' ') lines)" >> "$OUT"
+      cp "$fetched" "$cached"
+      echo "- \`$key\`: baseline captured ($(wc -l < "$cached" | tr -d ' ') lines)" >> "$OUT"
       continue
     fi
-    if diff -q "$cached" "$TMP/$page.md" > /dev/null; then
-      echo "- \`$page\`: unchanged" >> "$OUT"
+    if diff -q "$cached" "$fetched" > /dev/null; then
+      echo "- \`$key\`: unchanged" >> "$OUT"
     else
       docs_changed=$((docs_changed + 1))
-      added=$(diff "$cached" "$TMP/$page.md" | grep -c '^>')
-      removed=$(diff "$cached" "$TMP/$page.md" | grep -c '^<')
+      added=$(diff "$cached" "$fetched" | grep -c '^>')
+      removed=$(diff "$cached" "$fetched" | grep -c '^<')
       mkdir -p "$CACHE/diffs"
-      diff -u "$cached" "$TMP/$page.md" > "$CACHE/diffs/$TODAY-$page.diff"
-      echo "- \`$page\`: **changed** (+$added/-$removed), diff in \`$CACHE/diffs/$TODAY-$page.diff\`" >> "$OUT"
-      heads=$(diff "$cached" "$TMP/$page.md" | grep -E '^[<>] #{1,4} ' | head -8)
+      diff -u "$cached" "$fetched" > "$CACHE/diffs/$TODAY-$key.diff"
+      echo "- \`$key\`: **changed** (+$added/-$removed), diff in \`$CACHE/diffs/$TODAY-$key.diff\`" >> "$OUT"
+      # grep -F would also count a note citing hooks-guide as citing hooks.
+      url_re=$(sed 's/[][\.*^$()+?{}|]/\\&/g' <<< "$url")
+      grep -lE "$url_re([^a-z0-9-]|\$)" "$RESEARCH"/*.md 2>/dev/null | while read -r note; do
+        echo "  Cited by: research/${note##*/} — refresh with \`/research\`" >> "$OUT"
+      done
+      heads=$(diff "$cached" "$fetched" | grep -E '^[<>] #{1,4} ' | head -8)
       [[ -n $heads ]] && { echo "  Changed headings:" >> "$OUT"; sed 's/^/    /' <<< "$heads" >> "$OUT"; }
-      cp "$TMP/$page.md" "$cached"
+      cp "$fetched" "$cached"
     fi
+  done < "$TMP/doc-urls.txt"
+
+  # Plain "- name:" lines, no backticks, so these never count as doc pages.
+  echo >> "$OUT"
+  echo "New pages since last run (leads, not evidence):" >> "$OUT"
+  echo >> "$OUT"
+  mkdir -p "$CACHE/index"
+  for name in code-llms platform-llms anthropic-engineering; do
+    case $name in
+      code-llms) src=https://code.claude.com/docs/llms.txt ;;
+      platform-llms) src=https://platform.claude.com/llms.txt ;;
+      anthropic-engineering) src=https://www.anthropic.com/engineering ;;
+    esac
+    # A transfer cut short would still yield links, and saving them makes the tail "new" next run.
+    links=0
+    if curl -sSfL -o "$TMP/index-$name.raw" "$src" 2>/dev/null; then
+      case $name in
+        code-llms) grep -oE 'https://code\.claude\.com/[^) ]+' ;;
+        platform-llms) grep -oE 'https://platform\.claude\.com/[^) ]+' ;;
+        # The engineering index has no hrefs; its article slugs sit in escaped JSON.
+        anthropic-engineering) grep -oE '\\"slug\\":\{[^}]*current\\":\\"[a-z0-9-]+' |
+          sed -E 's|.*\\"|https://www.anthropic.com/engineering/|' ;;
+      esac < "$TMP/index-$name.raw" | sort -u > "$TMP/index-$name.txt"
+      links=$(wc -l < "$TMP/index-$name.txt" | tr -d ' ')
+    fi
+    saved="$CACHE/index/$name.txt"
+    if ((links == 0)); then
+      echo "- $name: link extraction failed" >> "$OUT"
+      continue
+    fi
+    if [[ ! -f $saved ]]; then
+      echo "- $name: baseline captured ($links links)" >> "$OUT"
+    else
+      comm -13 "$saved" "$TMP/index-$name.txt" > "$TMP/new-$name.txt"
+      new=$(wc -l < "$TMP/new-$name.txt" | tr -d ' ')
+      {
+        if ((new == 0)); then
+          echo "- $name: none new"
+        else
+          echo "- $name: $new new"
+          head -10 "$TMP/new-$name.txt" | sed 's/^/  - /'
+          ((new > 10)) && echo "  … $((new - 10)) more in $saved"
+        fi
+      } >> "$OUT"
+    fi
+    cp "$TMP/index-$name.txt" "$saved"
   done
 else
   echo "Skipped (\`--no-fetch\`)." >> "$OUT"
@@ -448,6 +534,28 @@ for md in "$INBOX"/*.md; do
     | sed 's/^/    /' >> "$OUT"
 done
 ((issues_read)) || echo "No unread issue." >> "$OUT"
+
+# ---------------------------------------------------------------- logs
+
+section "Logs"
+
+if [[ -f ${UATU_LESSONS:-} && -r $UATU_LESSONS ]]; then
+  open=$(awk '/^## /{h=$0;hl=FNR} /\*\*open[*,]/ && hl!=done {print "- "FILENAME":"hl": "h; done=hl}' \
+    "$UATU_LESSONS")
+  echo "${open:-- none open in \`$UATU_LESSONS\`}" >> "$OUT"
+else
+  echo "Lessons: not configured — set \`UATU_LESSONS\` to an absolute path (README)." >> "$OUT"
+fi
+if [[ -f ${UATU_PAPERCUTS:-} && -r $UATU_PAPERCUTS ]]; then
+  awk -v since="$(date -v-"${WINDOW}"d +%F)" -v f="$UATU_PAPERCUTS" '
+    /^(- )?[0-9]{4}-[0-9]{2}-[0-9]{2} · / {
+      n++; d = $0; sub(/^- /, "", d); if (substr(d, 1, 10) >= since) m++
+    }
+    END { printf "Papercuts: %s — %d entries, %d in the window.\n", f, n, m }' \
+    "$UATU_PAPERCUTS" >> "$OUT"
+else
+  echo "Papercuts: not configured — set \`UATU_PAPERCUTS\` to an absolute path (README)." >> "$OUT"
+fi
 
 # ---------------------------------------------------------------- history row
 

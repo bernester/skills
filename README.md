@@ -28,9 +28,9 @@ Swap `worktrees` for `rubberduck` or `uatu` as you like.
 
 `worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`, `jq` and macOS.
 
-## uatu needs `UATU_HOME`
+## Set up uatu
 
-See [uatu's README](plugins/uatu/README.md#uatu-needs-uatu_home).
+See [uatu's README](plugins/uatu/README.md#set-up).
 
 ## Editing the skills
 
@@ -44,3 +44,5 @@ for d in plugins/*/skills/*; do ln -sfn "$PWD/$d" ~/.claude/skills/"${d##*/}"; d
 ## License
 
 MIT
+
+The fonts in `assets/fonts/` are under the SIL Open Font License 1.1 — see the `LICENSE-*.txt` files beside them.

@@ -1,18 +1,19 @@
 ---
 name: uatu
-description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit to `$UATU_HOME` is opened as a pull request, never merged. Use for the weekly harness report, or `/uatu <skill-dir>` to check one skill's craft."
+description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit to `$UATU_HOME` is opened as a pull request, never merged. Use for the weekly harness report, `/uatu <skill-dir>` to check one skill's craft, or `/uatu setup` to create what uatu needs."
 disable-model-invocation: true
-allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(git remote get-url *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh), Bash(git remote get-url *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
 ---
 
 The observer. It reads upstream Claude Code changes, how the harness is really used, and
-policy against the research, and comes back with recommendations the human can veto. Read
-`$UATU_HOME/GLOSSARY.md` for the vocabulary — **digest**,
-**recommendation**, **currency** — if you have not this session.
+policy against the research, and comes back with recommendations the human can veto.
 
 Work in `$UATU_HOME` on branch main; every `uatu/`, `research/` and policy
 path below is relative to it.
-If `UATU_HOME` is unset, stop and say so: it names the repo that holds that data.
+If `UATU_HOME` is unset and the command is not `/uatu setup`, stop, say so and point to
+`/uatu setup`: it names the repo that holds that data.
+`UATU_LESSONS` and `UATU_PAPERCUTS` name two optional logs; unset, the digest says so and
+that channel is skipped.
 
 Two rules decide everything below:
 
@@ -31,6 +32,8 @@ outside the ones `~/.claude` links into.
 
 `/uatu <skill-dir>` runs only the skill-craft check in [Policy](#policy) on that one skill,
 inline, and prints its block. No digest, no report, no commit.
+
+`/uatu setup` runs `${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh`, prints its output, and stops.
 
 ## 1. Digest
 
@@ -87,7 +90,7 @@ Coverage is **reported, not asserted**. The transcript store spans two dozen CLI
 versions and two spellings of `sessionId`; a field missing from some records is a fact for
 the report, not a failure. No threshold fires until three rows of history exist.
 
-Six channels, in this order:
+Eight channels, in this order:
 
 **Behaviour.** Prompts typed three times or more → a skill candidate. A correction count
 that jumps → name the prompts. A tool-error signature with a double-digit count → the fix is
@@ -97,7 +100,9 @@ usually one line in a skill or one allow rule, and the signature says which.
 or say why it is a keeper. A `verify.sh` reading **DRIFT** whose output names a detached link
 is **urgent**: the CLI has replaced a symlinked file and live config has silently stopped
 being tracked. The recovery is that repo's own installer — name it from the failing
-`verify.sh` output, which says what to run.
+`verify.sh` output, which says what to run. `~/.claude` reading **DRIFT** under `git status` is
+a CLI save or a hand edit — commit or revert it (ADR 0015); not urgent. A `T` entry is
+a detached link: urgent, as above.
 The `### skill-doctor` block is the listing-cost verdict: a never-invoked skill with listing
 context is a deletion candidate as above. Its synced-from-claude.ai summary line is
 report-only — a deleted copy re-downloads; the fix is disabling it on claude.ai. uatu's own
@@ -109,7 +114,9 @@ frontmatter field, a scheduling feature that reaches `~/.claude`, a model ID a s
 that no longer exists — take the IDs from the digest's "Model IDs named" list and check them
 against the current IDs in the `claude-api` skill (load it with the Skill tool); never infer
 current IDs from the changelog or docs. If it does not load, say so and draw no model-ID
-conclusion. "47 releases happened" is not a recommendation.
+conclusion. "47 releases happened" is not a recommendation. A changed page with a
+`Cited by:` line meets the bar as "refresh `research/<f>.md`", ranked above a note that is
+only old.
 
 **Retention.** `cleanupPeriodDays` and the oldest surviving transcript. The history file is
 what makes the trend outlive the sweep; if a column has gone flat because data expired,
@@ -124,11 +131,20 @@ that bar, not this one. A source under `## Pointers` in `sources.md` is a lead t
 evidence. Everything else goes under **Noted** in the report, once; the issue is never
 re-read, so a noted tip is never raised again.
 
+**Lessons.** Each open entry the digest lists under *Logs* maps to one edit in the skill or
+script it names — a `file:line` and a diff. Cite the entry as `<file>:<line>` and never quote
+it. An entry that maps to no edit is not raised.
+
+**Papercuts.** Read the log the digest names. A symptom logged twice or more, however
+worded, or whose fix is a workaround, becomes a recommendation naming the tool, config or
+skill to change. Cite entries by line and never quote them: they name repos outside the
+linked ones.
+
 **Policy.** See the next section. Its findings become recommendations like any other.
 
 ## Policy
 
-The axis `verify.sh` cannot see: it checks a machine against policy, this checks policy
+The axis the drift checks cannot see: they check a machine, this checks policy
 against the guidance in `research/*.md`.
 
 Run the sweep only when `research/` or a policy file changed since the last report:
@@ -145,7 +161,7 @@ targets disagree (a rule in `CLAUDE.md` that the output style undoes). Findings 
 - `CLAUDE.md`
 - `output-styles/*.md`
 - `agents/*.md`
-- `settings.base.json`
+- `settings.json`
 - `skills.txt`
 - every authored skill (Skill-craft below)
 
@@ -215,12 +231,12 @@ Each recommendation carries three things, and is dropped if it cannot:
 ### 1. Drop `/rubberduck` — unused for 30 days
 
 **Evidence.** `~/.cache/uatu/digest.md` *Setup usage*: no invocation in the window;
-`links.txt:18` still links it; last typed 2026-08-02 (`history.jsonl`).
+`~/.claude/skills/rubberduck` still links it; last typed 2026-08-02 (`history.jsonl`).
 
 **Edit.**
 
-```diff
--skills/rubberduck
+```sh
+rm ~/.claude/skills/rubberduck
 ```
 
 **Why it earns its cost.** Every installed skill is a name the human has to remember. This
@@ -233,7 +249,8 @@ Then the closing sections:
 - **Research freshness** — each `research/*.md` date and age.
 - **Follow-ups** — recommendations from earlier reports that are neither done nor declined.
 - **Noted** — tips from this run's new issues that map to no edit, one line each with
-  the `inbox/<issue>.md:<line>` they came from.
+  the `inbox/<issue>.md:<line>` they came from; then the digest's new pages since last run,
+  one line each. These are leads, never recommendations.
 - **Counts** — the history table's last rows, so a reader sees the trend without the digest.
 - **Not looked at** — anything the digest could not reach this run.
 
