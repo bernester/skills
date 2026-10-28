@@ -107,7 +107,9 @@ a detached link: urgent, as above.
 **Upstream.** Releases newer than the installed CLI, and changed doc pages. The bar is
 narrow: does it change a finding in `research/*.md`? A new hook event, a new skill
 frontmatter field, a scheduling feature that reaches `~/.claude`, a model ID a skill names
-that no longer exists. "47 releases happened" is not a recommendation.
+that no longer exists. "47 releases happened" is not a recommendation. A changed page with a
+`Cited by:` line meets the bar as "refresh `research/<f>.md`", ranked above a note that is
+only old.
 
 **Retention.** `cleanupPeriodDays` and the oldest surviving transcript. The history file is
 what makes the trend outlive the sweep; if a column has gone flat because data expired,
@@ -240,7 +242,8 @@ Then the closing sections:
 - **Research freshness** — each `research/*.md` date and age.
 - **Follow-ups** — recommendations from earlier reports that are neither done nor declined.
 - **Noted** — tips from this run's new issues that map to no edit, one line each with
-  the `inbox/<issue>.md:<line>` they came from.
+  the `inbox/<issue>.md:<line>` they came from; then the digest's new pages since last run,
+  one line each. These are leads, never recommendations.
 - **Counts** — the history table's last rows, so a reader sees the trend without the digest.
 - **Not looked at** — anything the digest could not reach this run.
 
