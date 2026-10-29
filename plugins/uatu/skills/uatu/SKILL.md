@@ -98,7 +98,10 @@ usually one line in a skill or one allow rule, and the signature says which.
 
 **Setup hygiene.** An authored skill with no invocation in the window — propose deleting it
 or say why it is a keeper. The `### skill-doctor` block is the listing-cost verdict: a
-never-invoked skill with listing context is a deletion candidate the same way. Its
+never-invoked skill with listing context is a deletion candidate the same way. A skill that
+lives under `~/.claude/plugins/` — installed from a marketplace, not linked into
+`~/.claude/skills` from a repo you write — is removed by disabling its plugin, never by
+deleting its files: a deleted copy comes back on the next update. The skill-doctor block's
 synced-from-claude.ai summary line is report-only — a deleted copy re-downloads; the fix is
 disabling it on claude.ai. uatu's own counts stay the source for authored skills.
 `skill-doctor failed` means no verdict this run. A `verify.sh` reading **DRIFT** whose output
