@@ -457,7 +457,7 @@ if ((FETCH)); then
       anthropic-engineering) src=https://www.anthropic.com/engineering ;;
     esac
     # A transfer cut short would still yield links, and saving them makes the tail "new" next run.
-    links=0
+    index_links=0
     if curl -sSfL -o "$TMP/index-$name.raw" "$src" 2>/dev/null; then
       case $name in
         code-llms) grep -oE 'https://code\.claude\.com/[^) ]+' ;;
@@ -466,15 +466,15 @@ if ((FETCH)); then
         anthropic-engineering) grep -oE '\\"slug\\":\{[^}]*current\\":\\"[a-z0-9-]+' |
           sed -E 's|.*\\"|https://www.anthropic.com/engineering/|' ;;
       esac < "$TMP/index-$name.raw" | sort -u > "$TMP/index-$name.txt"
-      links=$(wc -l < "$TMP/index-$name.txt" | tr -d ' ')
+      index_links=$(wc -l < "$TMP/index-$name.txt" | tr -d ' ')
     fi
     saved="$CACHE/index/$name.txt"
-    if ((links == 0)); then
+    if ((index_links == 0)); then
       echo "- $name: link extraction failed" >> "$OUT"
       continue
     fi
     if [[ ! -f $saved ]]; then
-      echo "- $name: baseline captured ($links links)" >> "$OUT"
+      echo "- $name: baseline captured ($index_links links)" >> "$OUT"
     else
       comm -13 "$saved" "$TMP/index-$name.txt" > "$TMP/new-$name.txt"
       new=$(wc -l < "$TMP/new-$name.txt" | tr -d ' ')
