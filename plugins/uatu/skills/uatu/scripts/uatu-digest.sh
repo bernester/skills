@@ -332,6 +332,18 @@ repo_count=0
   echo
   echo "Repos linked into \`~/.claude\`: $repo_count. Verify overall: **$verify_status**"
   echo
+  echo "### skill-doctor"
+  echo
+  echo '```'
+  if doctor_out=$(cd "$CLAUDE_DIR" && claude -p "/skill-doctor" </dev/null 2>/dev/null) && [[ -n $doctor_out ]] \
+    && doctor_out=$(grep -v 'claude.ai sync' <<< "$doctor_out") \
+    && ! grep -v 'synced from claude.ai' <<< "$doctor_out" | grep -q 'claude\.ai'; then
+    printf '%s\n' "$doctor_out"
+  else
+    echo "skill-doctor failed — no listing-cost verdict this run."
+  fi
+  echo '```'
+  echo
   echo "Retention: \`cleanupPeriodDays\` = $(jq -r '.cleanupPeriodDays // "unset"' "$CLAUDE_DIR/settings.json" 2>/dev/null)."
   oldest=$(find "$PROJECTS" -name '*.jsonl' -print0 2>/dev/null | xargs -0 ls -tr 2>/dev/null | head -1)
   [[ -n $oldest ]] && echo "Oldest transcript: $(date -r "$oldest" +%F) (\`${oldest##*/}\`)."
@@ -445,7 +457,7 @@ if ((FETCH)); then
       anthropic-engineering) src=https://www.anthropic.com/engineering ;;
     esac
     # A transfer cut short would still yield links, and saving them makes the tail "new" next run.
-    links=0
+    index_links=0
     if curl -sSfL -o "$TMP/index-$name.raw" "$src" 2>/dev/null; then
       case $name in
         code-llms) grep -oE 'https://code\.claude\.com/[^) ]+' ;;
@@ -454,15 +466,15 @@ if ((FETCH)); then
         anthropic-engineering) grep -oE '\\"slug\\":\{[^}]*current\\":\\"[a-z0-9-]+' |
           sed -E 's|.*\\"|https://www.anthropic.com/engineering/|' ;;
       esac < "$TMP/index-$name.raw" | sort -u > "$TMP/index-$name.txt"
-      links=$(wc -l < "$TMP/index-$name.txt" | tr -d ' ')
+      index_links=$(wc -l < "$TMP/index-$name.txt" | tr -d ' ')
     fi
     saved="$CACHE/index/$name.txt"
-    if ((links == 0)); then
+    if ((index_links == 0)); then
       echo "- $name: link extraction failed" >> "$OUT"
       continue
     fi
     if [[ ! -f $saved ]]; then
-      echo "- $name: baseline captured ($links links)" >> "$OUT"
+      echo "- $name: baseline captured ($index_links links)" >> "$OUT"
     else
       comm -13 "$saved" "$TMP/index-$name.txt" > "$TMP/new-$name.txt"
       new=$(wc -l < "$TMP/new-$name.txt" | tr -d ' ')
@@ -481,6 +493,17 @@ if ((FETCH)); then
 else
   echo "Skipped (\`--no-fetch\`)." >> "$OUT"
 fi
+
+{
+  echo
+  echo "Model IDs named in linked skills:"
+  echo
+  ids=$(while IFS=$'\t' read -r top rel link; do
+    [[ $link == skills/* ]] || continue
+    (cd "$top" && grep -rnoE 'claude-(opus|sonnet|haiku|fable|[0-9])[a-z0-9.-]*[0-9]' "$rel" 2>/dev/null | sed "s|^|${top##*/}/|")
+  done < "$links")
+  if [[ -n $ids ]]; then sed -E 's/^([^:]+:[0-9]+):(.*)$/- \1: \2/' <<< "$ids" | sort -u; else echo "- none"; fi
+} >> "$OUT"
 
 # ---------------------------------------------------------------- sources
 

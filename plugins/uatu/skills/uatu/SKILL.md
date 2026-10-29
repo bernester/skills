@@ -97,9 +97,13 @@ that jumps → name the prompts. A tool-error signature with a double-digit coun
 usually one line in a skill or one allow rule, and the signature says which.
 
 **Setup hygiene.** An authored skill with no invocation in the window — propose deleting it
-or say why it is a keeper. A `verify.sh` reading **DRIFT** whose output names a detached link
-is **urgent**: the CLI has replaced a symlinked file and live config has silently stopped
-being tracked. The recovery is that repo's own installer — name it from the failing
+or say why it is a keeper. The `### skill-doctor` block is the listing-cost verdict: a
+never-invoked skill with listing context is a deletion candidate the same way. Its
+synced-from-claude.ai summary line is report-only — a deleted copy re-downloads; the fix is
+disabling it on claude.ai. uatu's own counts stay the source for authored skills.
+`skill-doctor failed` means no verdict this run. A `verify.sh` reading **DRIFT** whose output
+names a detached link is **urgent**: the CLI has replaced a symlinked file and live config has
+silently stopped being tracked. The recovery is that repo's own installer — name it from the failing
 `verify.sh` output, which says what to run. `~/.claude` reading **DRIFT** under `git status` is
 a CLI save or a hand edit — commit or revert it (ADR 0015); not urgent. A `T` entry is
 a detached link: urgent, as above.
@@ -107,7 +111,10 @@ a detached link: urgent, as above.
 **Upstream.** Releases newer than the installed CLI, and changed doc pages. The bar is
 narrow: does it change a finding in `research/*.md`? A new hook event, a new skill
 frontmatter field, a scheduling feature that reaches `~/.claude`, a model ID a skill names
-that no longer exists. "47 releases happened" is not a recommendation. A changed page with a
+that no longer exists — take the IDs from the digest's "Model IDs named" list and check them
+against the current IDs in the `claude-api` skill (load it with the Skill tool); never infer
+current IDs from the changelog or docs. If `claude-api` does not load, say so and draw no
+model-ID conclusion. "47 releases happened" is not a recommendation. A changed page with a
 `Cited by:` line meets the bar as "refresh `research/<f>.md`", ranked above a note that is
 only old.
 
