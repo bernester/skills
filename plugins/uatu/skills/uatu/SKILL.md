@@ -80,6 +80,12 @@ gh label list --search uatu --json name
 If no `uatu` label comes back, keep every recommendation report-only this run, and say in one
 line of the report that the label needs creating. Never create it.
 
+Any `gh` call in this step that exits non-zero — wrong account, no access, no network — is a
+failure, not an empty result: keep every recommendation report-only this run, and put the
+command and the first line of its stderr in **Not looked at**. "No `uatu` label", "no
+declines" and "no open pull requests" apply only when the call succeeded. When the declines
+call failed, say the recommendations are unchecked against pull-request declines.
+
 Convert every inbox file the digest marks **to convert** before judging: a `.pdf` with Read, a
 `.url` (one URL per file) with WebFetch, each into the `.md` the digest names. Then judge it as
 **new**.
@@ -255,7 +261,7 @@ Then the closing sections:
   the `inbox/<issue>.md:<line>` they came from; then the digest's new pages since last run,
   one line each. These are leads, never recommendations.
 - **Counts** — the history table's last rows, so a reader sees the trend without the digest.
-- **Not looked at** — anything the digest could not reach this run.
+- **Not looked at** — anything the digest or a `gh` call could not reach this run.
 
 Keep it short. A recommendation is a paragraph and a diff, not an essay.
 

@@ -66,11 +66,20 @@ check() {
 }
 
 check "GitHub origin" "git remote get-url origin" "git remote add origin <url>"
-if git remote get-url origin > /dev/null 2>&1; then
-  check "label uatu" "gh label list --search uatu --json name --jq '.[].name' | grep -qx uatu" \
-    "gh label create uatu"
-else
+if ! git remote get-url origin > /dev/null 2>&1; then
   echo "todo  label uatu — needs a GitHub origin first"
+elif ! command -v gh > /dev/null; then
+  echo "todo  label uatu — install gh first"
+else
+  gh_err=$(mktemp)
+  if ! labels=$(gh label list --search uatu --json name --jq '.[].name' 2> "$gh_err"); then
+    echo "fail  label uatu — gh failed: $(head -n 1 "$gh_err")"
+  elif grep -qx uatu <<< "$labels"; then
+    echo "ok    label uatu"
+  else
+    echo "todo  label uatu — gh label create uatu"
+  fi
+  rm -f "$gh_err"
 fi
 check "python3" "command -v python3" "install python3"
 check "jq" "command -v jq" "install jq"
