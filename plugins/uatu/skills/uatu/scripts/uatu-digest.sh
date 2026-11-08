@@ -8,7 +8,9 @@ set -uo pipefail
 export LC_ALL=C
 
 CLAUDE_DIR="$HOME/.claude"
-DATA="${UATU_HOME:?set it to the repo holding uatu/}/uatu"
+HOME_FROM_ENV=${UATU_HOME:-}
+UATU_HOME=${UATU_HOME:-$CLAUDE_DIR}
+DATA="$UATU_HOME/uatu"
 CACHE="${UATU_CACHE:-$HOME/.cache/uatu}"
 OUT="$CACHE/digest.md"
 HISTORY="$DATA/history.tsv"
@@ -25,7 +27,14 @@ while (($#)); do
   esac
 done
 
-[[ -d $DATA ]] || { echo "uatu-digest: no data directory at $DATA — run /uatu setup" >&2; exit 1; }
+[[ -d $UATU_HOME ]] || { echo "uatu-digest: UATU_HOME=$UATU_HOME does not exist" >&2; exit 1; }
+
+SKILL_DIR=$(cd "$(dirname "$0")/.." && pwd)
+mkdir -p "$DATA" "$UATU_HOME/research"
+for f in declined.md sources.md; do
+  [[ -e $DATA/$f ]] || { cp "$SKILL_DIR/templates/$f" "$DATA/$f" && echo "uatu-digest: created $DATA/$f"; }
+done
+IFS=$'\t' read -r mode mode_why < <("$SKILL_DIR/scripts/uatu-mode.sh" "$UATU_HOME")
 
 TODAY=$(date +%F)
 TMP=$(mktemp -d)
@@ -66,6 +75,16 @@ section() { printf '\n## %s\n\n' "$1" >> "$OUT"; }
   echo
   echo "Deterministic. Regenerate with \`~/.claude/skills/uatu/scripts/uatu-digest.sh\`."
   echo
+  if [[ $mode == pr ]]; then
+    echo "- Mode: **PR** — pull requests to \`$mode_why\`"
+  else
+    echo "- Mode: **local** — next step to PR mode: $mode_why"
+  fi
+  # 0.1 required UATU_HOME, so a set one marks an install from before 0.2.
+  if [[ -n $HOME_FROM_ENV && ! -e $CACHE/notice-0.2 ]]; then
+    echo "- uatu 0.2 needs less setup — run \`/uatu setup\` to see what this install can drop."
+    touch "$CACHE/notice-0.2"
+  fi
   echo "- CLI: \`$cli_version\` · window ${WINDOW}d"
   echo "- Transcripts: $recent_count of $all_count files touched in the window, ${store_mb} MB total"
 } >> "$OUT"
@@ -323,7 +342,9 @@ repo_count=0
   done < <(cut -f1 "$links" | sort -u)
   echo "### ~/.claude (\`git status\`, excluding \`uatu/\`)"
   echo
-  if claude_drift=$(git --no-optional-locks -C "$CLAUDE_DIR" status --porcelain -- . ':!uatu' 2>&1) && [[ -z $claude_drift ]]; then
+  if ! git -C "$CLAUDE_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Not a git repo — no drift check."
+  elif claude_drift=$(git --no-optional-locks -C "$CLAUDE_DIR" status --porcelain -- . ':!uatu' 2>&1) && [[ -z $claude_drift ]]; then
     echo "\`git status\`: **clean**"
   else
     verify_status=DRIFT
@@ -509,8 +530,10 @@ fi
 
 section "Sources"
 
-# An issue is read once its .md is committed; delete the .md to re-read it.
+# An issue is read once its .md is committed, or, uncommitted, once it is older than the
+# latest report; delete the .md to re-read it.
 issues_read=0
+last_report=$(ls "$DATA"/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.md 2>/dev/null | tail -1)
 INBOX="$DATA/inbox"
 for eml in "$INBOX"/*.eml; do
   [[ -f $eml && ! -f ${eml%.eml}.md ]] || continue
@@ -524,7 +547,8 @@ for src in "$INBOX"/*.pdf "$INBOX"/*.url; do
 done
 for md in "$INBOX"/*.md; do
   [[ -f $md ]] || continue
-  if git -C "$INBOX" ls-files --error-unmatch "$md" > /dev/null 2>&1; then
+  if git -C "$INBOX" ls-files --error-unmatch "$md" > /dev/null 2>&1 \
+    || [[ -n $last_report && $md -ot $last_report ]]; then
     echo "- \`inbox/${md##*/}\`: already read" >> "$OUT"
     continue
   fi

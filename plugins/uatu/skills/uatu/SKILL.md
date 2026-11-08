@@ -1,27 +1,39 @@
 ---
 name: uatu
-description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit to `$UATU_HOME` is opened as a pull request, never merged. Use for the weekly harness report, `/uatu <skill-dir>` to check one skill's craft, or `/uatu setup` to create what uatu needs."
+description: "Reports how the harness is actually used, what changed upstream in Claude Code, and whether policy still matches research/*.md, as at most seven proposed changes, each with its evidence and the exact edit; an edit lands only after the human approves it, here or by merging its pull request. Use for the weekly harness report, `/uatu <skill-dir>` to check one skill's craft, or `/uatu setup` to check the install."
 disable-model-invocation: true
-allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh), Bash(git remote get-url *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh *), Bash(${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh *), Bash(git log *), Bash(find *), Bash(git fetch *), Bash(git worktree add *), Bash(git worktree remove *), Bash(git add *), Bash(git commit *), Bash(git push -u origin uatu/*), Bash(gh label list *), Bash(gh pr create *), Bash(gh pr list *)
 ---
 
 The observer. It reads upstream Claude Code changes, how the harness is really used, and
 policy against the research, and comes back with recommendations the human can veto.
 
-Work in `$UATU_HOME` on branch main; every `uatu/`, `research/` and policy
-path below is relative to it.
-If `UATU_HOME` is unset and the command is not `/uatu setup`, stop, say so and point to
-`/uatu setup`: it names the repo that holds that data.
+Every `uatu/`, `research/` and policy path below is relative to the **UATU home**: `$UATU_HOME`
+if set, else `~/.claude`. The digest creates `uatu/declined.md`, `uatu/sources.md` and
+`research/` there when absent. Terms: [GLOSSARY.md](../../GLOSSARY.md).
 `UATU_LESSONS` and `UATU_PAPERCUTS` name two optional logs; unset, the digest says so and
 that channel is skipped.
 
-Two rules decide everything below:
+The digest's **Mode** line names this run's mode:
+
+- **PR mode** — the home is a git repo with a GitHub `origin`, `gh` is signed in, and a `uatu`
+  label exists. Each edit to a file the home repo tracks becomes a pull request labelled `uatu`.
+  Work in the home on branch main.
+- **Local mode** — anything else. After the report the human answers each recommendation here
+  ([6](#6-ask-local-mode)). Nothing is committed in local mode, not even the report.
+
+`UATU_MODE=local|pr` overrides the pick. A `gh` call that exits non-zero in a PR-mode run drops
+the rest of the run to local mode. Never create the label.
+
+Three rules decide everything below:
 
 - **Deterministic first, judgment second.** Counts come from the digest script, not from you.
   A recommendation with no number or `file:line` behind it does not ship.
-- **It proposes as pull requests; it never merges, and never edits the `$UATU_HOME` main
-  checkout** beyond its own `uatu/`. An edit lands only on a `uatu/*` branch in a throwaway
-  worktree; nothing under `~/.claude`, no policy file and no skill changes in place.
+- **Apply an edit only after the human approves it in this run.** In local mode that is an
+  Apply answer; in PR mode the edit lands on a `uatu/*` branch in a throwaway worktree and the
+  merge is the approval — uatu never merges. Its own `uatu/` files need no approval.
+- **Edits stay inside the home**, files reached through its symlinks included. A diff into
+  any other repo stays in the report.
 
 Scope is **the harness**: every repo `~/.claude` links into, the runtime it runs on, and
 upstream. A repo's own product work stays out.
@@ -33,7 +45,10 @@ outside the ones `~/.claude` links into.
 `/uatu <skill-dir>` runs only the skill-craft check in [Policy](#policy) on that one skill,
 inline, and prints its block. No digest, no report, no commit.
 
-`/uatu setup` runs `${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh`, prints its output, and stops.
+`/uatu setup` runs `${CLAUDE_SKILL_DIR}/scripts/uatu-setup.sh` and prints its output. Lines
+starting `offer <name>` are migrations from 0.1: ask once, multi-select, which to apply, run
+`uatu-setup.sh --apply <names joined by commas>` with the chosen ones, print that output, and
+stop. With no `offer` line, or nothing chosen, just stop. A `note` line is the human's to act on.
 
 ## 1. Digest
 
@@ -41,7 +56,8 @@ inline, and prints its block. No digest, no report, no commit.
 ${CLAUDE_SKILL_DIR}/scripts/uatu-digest.sh
 ```
 
-Writes `~/.cache/uatu/digest.md` and appends one row to `uatu/history.tsv`.
+Writes `~/.cache/uatu/digest.md` and appends one row to `uatu/history.tsv`. Without git the
+digest skips the git-based signals and says so.
 The cache sits outside the checkout so a run from a worktree still has last week's doc baselines.
 Costs no tokens. Read the digest file; do not re-derive its numbers by hand.
 
@@ -50,16 +66,17 @@ that page this run.
 
 ## 2. Read what already happened
 
-- Declines — every recommendation the human rejected, with the reason: closed, unmerged pull
-  requests labelled `uatu` (the last comment is the reason), and `uatu/declined.md`.
-  **Never propose one of these again.** If new evidence genuinely overturns a decline, say
-  which line it overturns and what changed; otherwise stay silent.
+- Declines — every recommendation the human rejected, with the reason: `uatu/declined.md`,
+  and in PR mode also closed, unmerged pull requests labelled `uatu` (the last comment is the
+  reason). **Never propose one of these again.** If new evidence genuinely overturns a
+  decline, say which line it overturns and what changed; otherwise stay silent.
   ```sh
   gh pr list --state closed --label uatu --limit 1000 --json title,body,comments,mergedAt
   ```
   Keep the entries whose `mergedAt` is null.
-- Open `uatu` pull requests (`gh pr list --label uatu`) and the last two reports in `uatu/` —
-  an open recommendation is a follow-up line, not a fresh recommendation.
+- The last two reports in `uatu/`, and in PR mode open `uatu` pull requests
+  (`gh pr list --label uatu`) — an open recommendation is a follow-up line, not a fresh
+  recommendation. A deferred one may come back as a fresh recommendation.
 - `research/*.md` — the guidance every judgment is measured against. Each carries an ISO date
   in its first three lines; list any older than four weeks in the report and point to
   `/research` to refresh it.
@@ -69,22 +86,11 @@ that page this run.
   source is trusted. Read nothing from an issue that this file does not name; a source
   with no `section:` line is read whole.
 
-Pull requests need a GitHub origin for `$UATU_HOME` (`git remote get-url origin`); with any
-other origin, skip the `gh` calls and keep every recommendation report-only. On GitHub, check the
-label exists:
-
-```sh
-gh label list --search uatu --json name
-```
-
-If no `uatu` label comes back, keep every recommendation report-only this run, and say in one
-line of the report that the label needs creating. Never create it.
-
 Any `gh` call in this step that exits non-zero — wrong account, no access, no network — is a
-failure, not an empty result: keep every recommendation report-only this run, and put the
-command and the first line of its stderr in **Not looked at**. "No `uatu` label", "no
-declines" and "no open pull requests" apply only when the call succeeded. When the declines
-call failed, say the recommendations are unchecked against pull-request declines.
+failure, not an empty result: the run is in local mode from here, and the command and the
+first line of its stderr go in **Not looked at**. "No declines" and "no open pull requests"
+apply only when the call succeeded. When the declines call failed, say the recommendations
+are unchecked against pull-request declines.
 
 Convert every inbox file the digest marks **to convert** before judging: a `.pdf` with Read, a
 `.url` (one URL per file) with WebFetch, each into the `.md` the digest names. Then judge it as
@@ -162,8 +168,14 @@ Run the sweep only when `research/` or a policy file changed since the last repo
 git log --oneline --since="<last report's date>" -- research <the targets listed below>
 ```
 
-Empty output: the report's Policy section is one line, `unchanged since <date>`. Otherwise
-run the sweep in one `fable` subagent that reads every target below, so it can see where two
+When the home is not a git repo, compare file times instead:
+
+```sh
+find research <the targets listed below> -newer uatu/<last report>.md
+```
+
+With no earlier report, run the sweep. Empty output: the report's Policy section is one line,
+`unchanged since <date>`. Otherwise run the sweep in one `fable` subagent that reads every target below, so it can see where two
 targets disagree (a rule in `CLAUDE.md` that the output style undoes). Findings come back with
 `file:line`.
 
@@ -230,7 +242,8 @@ skill-craft  skills/<name>
 
 ## 4. Write the report
 
-`uatu/YYYY-MM-DD.md`. **At most seven recommendations**, most valuable first. Fewer
+`uatu/YYYY-MM-DD.md`. Under the title, copy the digest's **Mode** line and, if present, its
+uatu 0.2 notice line. **At most seven recommendations**, most valuable first. Fewer
 is better, and none is a legitimate answer — a report that says "nothing to do" and shows the
 counts behind it did its job.
 
@@ -265,8 +278,8 @@ Then the closing sections:
 
 Keep it short. A recommendation is a paragraph and a diff, not an essay.
 
-A recommendation whose diff edits a file in `$UATU_HOME` becomes one pull request. From
-`$UATU_HOME`:
+In local mode every recommendation stays in full. In PR mode a recommendation whose diff edits
+a file the home repo tracks becomes one pull request. From the home:
 
 ```sh
 git fetch origin
@@ -285,18 +298,23 @@ git push -u origin uatu/<report-stem>-<n>-<slug>
 gh pr create --label uatu --title '<the recommendation's title>' --body-file <body file>
 ```
 
-Then `cd "$UATU_HOME"` and `git worktree remove <tmp>`. If any step fails, remove the worktree
-and keep the recommendation report-only. In the report, a recommendation opened as a pull request
-is one line with its URL. A diff into another repo, or a manual action, stays in full.
+Then `cd` back to the home and `git worktree remove <tmp>`. If any step fails, remove the
+worktree, drop to local mode, and keep the recommendation in full. In the report, a
+recommendation opened as a pull request is one line with its URL. A diff into another repo, or a
+manual action, stays in full.
 
 ## 5. Hand over
 
+In PR mode only, from the home:
+
 ```sh
-cd $UATU_HOME && git add uatu && git commit -m "uatu(<date>): <the one-line verdict>" -- uatu
+git add uatu && git commit -m "uatu(<date>): <the one-line verdict>" -- uatu
 ```
 
 Commit the report, `history.tsv`, `declined.md` and the converted `inbox/*.md` only. The
-cache under `~/.cache/uatu/` is regenerable and never enters the repo.
+cache under `~/.cache/uatu/` is regenerable and never enters the repo. Never push main; only
+`uatu/*` branches are pushed, and they branch from `origin/main`, so local commits on main never
+reach a pull request.
 
 If any recommendation is marked **urgent** (only a detached link is urgent), fire one
 notification:
@@ -305,19 +323,33 @@ notification:
 osascript -e 'display notification "<what broke>" with title "uatu"'
 ```
 
-Never push main; only `uatu/*` branches are pushed, and they branch from `origin/main`, so local
-commits on main never reach a pull request. Print the report's headline, the count of
-recommendations and each pull request's URL, then stop.
+Print the report's headline, the count of recommendations and each pull request's URL. In PR
+mode, stop here.
 
-## 6. When the human answers
+## 6. Ask (local mode)
 
-A pull request is accepted by merging it, and rejected by closing it with a comment that gives
-the reason. A rejected report-only recommendation gets one line in `uatu/declined.md`:
+Ask about each recommendation whose edit lies inside the home, with AskUserQuestion: one
+question per recommendation, at most four per call, each with three options.
 
-```
-- 2026-09-08 · drop /rubberduck — used in bursts; a quiet month is not a dead skill.
-```
+- **Apply** — make the report's edit exactly, with the Edit tool. If it does not apply, say so;
+  the recommendation is deferred.
+- **Decline** — one line in `uatu/declined.md`. The reason comes from the answer's note; if it
+  gave none, ask for it once in chat.
+  ```
+  - 2026-09-08 · drop /rubberduck — used in bursts; a quiet month is not a dead skill.
+  ```
+- **Defer** — nothing is recorded, and the recommendation may come back. An unanswered
+  question is a defer.
 
-The reason is the part that matters: it is what stops the next run from re-proposing. An
-accepted report-only recommendation needs no bookkeeping — the edit lands as a normal commit,
-and the next digest shows it.
+With nobody to answer — a scheduled run, `claude -p`, no AskUserQuestion — ask nothing: every
+recommendation is deferred, no file is edited, no decline is written.
+
+Commit nothing, even when the home is a git repo: an applied edit stays uncommitted, and the
+next digest's drift check shows it. Print what was applied, declined and deferred, then stop.
+
+## 7. When the human answers a pull request
+
+A pull request is accepted by merging it, and declined by closing it with a comment that gives
+the reason. The reason is the part that matters: it is what stops the next run from
+re-proposing. A declined recommendation that never became a pull request gets one line in
+`uatu/declined.md`, as in [6](#6-ask-local-mode).
