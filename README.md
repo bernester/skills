@@ -5,7 +5,7 @@ Small add-ons for Claude, as a plugin marketplace. New here? Start with rubberdu
 | Plugin | Commands | What for |
 |---|---|---|
 | [`rubberduck`](plugins/rubberduck/README.md) | `/rubberduck` | Talk an idea through; it asks about what you said and hands back the gaps. |
-| [`uatu`](plugins/uatu/README.md) | `/uatu` | Weekly report on how your harness is used, proposing changes as pull requests, each with evidence. |
+| [`uatu`](plugins/uatu/README.md) | `/uatu` | Weekly report on how your harness is used, proposing changes, each with evidence. |
 | [`worktrees`](plugins/worktrees/README.md) | `/worktrees`, `/prune-merged`, `/agents-clean`, `/left` | Keep worktrees, branches and Claude sessions tidy. |
 
 ## Install
@@ -26,11 +26,7 @@ In the Claude desktop app:
 
 Swap `worktrees` for `rubberduck` or `uatu` as you like.
 
-`worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`, `jq` and macOS.
-
-## Set up uatu
-
-See [uatu's README](plugins/uatu/README.md#set-up).
+`worktrees` needs `jq` and `gh` or `glab`; `uatu` needs `python3`, `jq` and macOS, and `gh` for its PR mode.
 
 ## Editing the skills
 
